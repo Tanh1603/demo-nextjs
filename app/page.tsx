@@ -12,12 +12,20 @@ export default function HomePage() {
           thông tin.
         </p>
 
-        <Link
-          href="/students"
-          className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg shadow-md font-semibold transition-all duration-200"
-        >
-          Xem danh sách sinh viên
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link
+            href="/students"
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg shadow-md font-semibold transition-all duration-200"
+          >
+            Xem danh sách sinh viên
+          </Link>
+          <Link
+            href="/caching"
+            className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg shadow-md font-semibold transition-all duration-200"
+          >
+            🚀 Caching Demo
+          </Link>
+        </div>
       </section>
     </main>
   );
