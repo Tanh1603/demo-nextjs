@@ -1,7 +1,6 @@
 import "dotenv/config";
 
-import { PrismaClient } from "@/lib/generated/prisma/client";
-import { Gender, Major } from "@/lib/generated/prisma/enums";
+import { Gender, Major, PrismaClient } from "@/lib/generated/prisma/client";
 import { faker } from "@faker-js/faker";
 
 const prisma = new PrismaClient();
