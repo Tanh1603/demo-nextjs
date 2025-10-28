@@ -16,8 +16,6 @@ export async function GET() {
       },
     });
 
-    await new Promise(r => setTimeout(r, 5000));
-
     return NextResponse.json(
       {
         data: students,
@@ -54,7 +52,6 @@ export async function POST(req: NextRequest) {
           },
         })
     );
-    revalidatePath("/students", "page");
 
     return NextResponse.json({
       data: student,
