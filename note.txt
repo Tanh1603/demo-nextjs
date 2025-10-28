@@ -1,0 +1,290 @@
+1. React Client & Server Components
+* khi client component trong server component thì nó sẽ đc pre-render
+tức là những phần không cần interactivity hoặc không phụ thuộc vào trình duyệt vẫn được render ở server
+-> server-side pre-redering
+
+
+2. Routing
+* Nested route
+* dynamic route
+* layout
+* route groups
+* error handling
+* loading
+
+
+3. Data Fetching
+* server componenthmr cache
+
+4. API Routes
+
+5. Caching
+* SSF
+* ISR
+* PPR
+6. Build Adapters API
+7. Metadata
+
+
+## Nextjs 16
+* React Compiler là bộ phân tích code tĩnh (static compiler) được thêm vào giai đoạn build (thông qua Babel plugin hoặc SWC plugin).
+Nó tự động thêm memoization và cache kết quả render, giống như bạn thủ công dùng React.memo, useMemo, useCallback — nhưng chính xác hơn, an toàn hơn và tự động.
+* Enhanced Routing: nếu cùng layout thì nó chỉ chạy 1 lần
+
+
+
+// AI
+1) React Server & Client Components (RSC / Client Components)
+
+Ngắn gọn (Next.js): Next.js mặc định sử dụng React Server Components (RSC) cho layouts/pages trong App Router; khi cần tương tác (event handlers, state, browser APIs) bạn đánh dấu component bằng "use client" để chuyển sang Client Component. RSC cho phép render nhiều phần UI trên server, gửi HTML + các chunk cần thiết tới client, giảm bundle size và cải thiện TTFB/first-render. 
+nextjs.org
++1
+
+Ưu điểm:
+
+Giảm kích thước bundle client: logic không cần tương tác sẽ không đi xuống browser.
+
+Render server có thể truy cập an toàn tới secrets, DB, internal APIs mà không leak.
+
+Tối ưu hoá performance cho content-heavy pages (faster TTFB, less JS parsing on client). 
+nextjs.org
+
+Nhược điểm / phức tạp:
+
+Mental model mới: cần suy nghĩ rõ component là server hay client; mixing có thể gây confusion.
+
+Một số patterns (client-only libraries, heavy client-side interactivity) vẫn cần Client Components => vẫn có bundle.
+
+Debugging stack traces và hydration edge-cases có thể khó hơn khi mới dùng.
+
+So sánh với framework khác:
+
+Remix: tập trung vào web standards (forms, fetch) và server rendering, không có concept RSC theo cùng cách React RSC; Remix tách rõ loader/actions, ít “automatic server component” nhưng dễ hiểu cho devs thích fetch-on-load pattern. (Remix >= ưu thế về conventions cho data mutations.)
+
+SvelteKit: Svelte compile-time đưa hầu hết logic thành minimal JS; Svelte không có RSC nhưng bản thân framework tạo bundle nhẹ hơn, đôi khi có latency/SSR tradeoffs khác. 
+betterstack.com
++1
+
+2) Routing (App Router vs Pages Router — file-system routing)
+
+Next.js (hiện tại):
+
+App Router (./app) là router mới: segment-based routing, nested layouts, server components by default, layouts streaming, per-segment configs (revalidate, dynamic params).
+
+Pages Router (./pages) là router cũ, vẫn hỗ trợ; dễ với static pages / legacy. 
+nextjs.org
++1
+
+Ưu điểm App Router:
+
+Nested layouts & co-location: dễ chia layout, giữ state layout khi navigate.
+
+Per-segment data & caching control: config revalidate ở segment-level tiện cho ISR/partial revalidation.
+
+Server Components integration: routing + RSC liên kết chặt chẽ hơn.
+
+Nhược điểm:
+
+Learning curve (mới với devs từ Pages Router).
+
+Một số ecosystem libs, plugin, tutorial vẫn theo Pages Router — có friction khi migrate.
+
+So sánh:
+
+Remix: router của Remix mạnh về data layering (loaders per route) và đạt được predictable behavior cho loaders+forms; App Router cung cấp nested layouts tương tự ý tưởng nhưng khác API/semantics.
+
+Nuxt (Vue): cũng có file-system router + nested layouts, pattern tương đồng (Nuxt 3 giới thiệu layouts/slots, composables).
+
+SvelteKit: routing segment-based tương tự, nhưng Next.js có ưu thế về React ecosystem và RSC integration. 
+Medium
++1
+
+3) Data Fetching
+
+Cơ chế Next.js (App Router):
+
+Bạn có thể fetch trực tiếp trong Server Components (tức là trong page/layout) bằng fetch(); Next cung cấp options như { next: { revalidate: seconds } } để control cache/revalidation. Ngoài ra còn có getServerSideProps / getStaticProps cho Pages Router. 
+nextjs.org
++1
+
+Patterns chính:
+
+Static generation (SSG) + ISR (revalidate) — tốt cho content tĩnh được cập nhật theo chu kỳ.
+
+Server-side rendering (SSR) — render mỗi request (getServerSideProps hoặc fetch without caching).
+
+Edge rendering / streaming — App Router hỗ trợ streaming HTML từ server.
+
+Ưu / nhược:
+
+Đơn giản: fetch trực tiếp trong server component; không phải viết client-side data plumbing cho SSR.
+
+Cache control: granular revalidate per fetch or per segment.
+
+− Complexity: mixing server/client fetching + incremental revalidation yêu cầu hiểu rõ lifecycle.
+
+− Edge cases: nếu bạn dùng many small fetches, cần manage parallelism and caching carefully.
+
+So sánh:
+
+Remix: emphasis trên loader functions, strong convention for mutations and progressive enhancement; Remix khuyến khích web-standard approaches.
+
+SvelteKit & Nuxt: có load functions / asyncData tương tự; SvelteKit hướng nhiều tới minimal runtime và small bundles.
+
+React Query / TanStack Query: client-side caching lib vẫn dùng tốt khi cần client interactivity (but Next’s server fetch + RSC reduce need in many pages). 
+nextjs.org
++1
+
+4) API Routes (and Route Handlers)
+
+Next.js:
+
+Pages Router: pages/api/* cung cấp API routes (serverless function style).
+
+App Router: giới thiệu Route Handlers (file route.js/route.ts) — allows handlers inside the app tree (server-only) and can be deployed to serverless or edge. Docs khuyên: with App Router use route handlers or server components rather than old API routes. 
+nextjs.org
++1
+
+Ưu điểm:
+
+Tiện: viết API trong chính app, dễ share types/logic.
+
+Hỗ trợ serverless + edge (tùy provider) — nhanh để prototype. 
+nextjs.org
+
+Nhược điểm:
+
+Không thay thế hoàn toàn backend/service riêng: nếu app cần heavy-duty backend (long-running jobs, complex auth, large databases), tách service vẫn tốt.
+
+Vendor lock-in risk nếu quá rely vào serverless specifics.
+
+So sánh:
+
+Remix: khuyến khích tạo backend-like routes (actions/loaders), nhưng thường bạn vẫn tách services khi cần.
+
+SvelteKit/Nuxt: đều có server endpoints; pattern tương tự.
+
+Khi cần API lớn: frameworks này đều khả năng, nhưng nhiều team chọn tách ra thành microservice hoặc API service (NestJS, Express, Fastify) cho scale/maintainability. 
+nextjs.org
+
+5) Caching
+
+Next.js mechanisms:
+
+fetch supports { next: { revalidate } } for time-based ISR.
+
+revalidate exports at segment-level (e.g., export const revalidate = 3600) to revalidate whole segment.
+
+Server Components + streaming rendering let you cache rendered output and revalidate granularly. Docs có guide in-depth. 
+nextjs.org
++1
+
+Ưu điểm:
+
+Granularity: revalidate per fetch, per segment, or per-route.
+
+Integrated with rendering: caching applies to server rendering output, reducing server work and cost.
+
+Edge caching: when deployed to CDNs/edge platforms, combined with provider caches can be very fast. 
+nextjs.org
+
+Nhược điểm:
+
+Correctly reasoning about stale-while-revalidate, revalidate timings, and partial revalidation can be tricky.
+
+When many clients mutate data frequently, ISR or cache-invalidation logic becomes complex — may need webhooks or explicit invalidation APIs.
+
+So sánh:
+
+Remix: focuses on cache headers and web standards; you often manage caching via HTTP headers and CDN.
+
+SvelteKit/Nuxt: offer similar server-side caching patterns, but Next.js has more built-in higher-level ISR primitives. 
+nextjs.org
+
+6) Build Adapters API (Deployment adapters)
+
+Tình hình Next.js:
+
+Next.js historically deploys well to Vercel (native) and has community/official ways to deploy to Netlify, Cloudflare, etc. Vercel team is building a “Deployment Adapters API” so Next apps can be adapted to various platforms more easily (work-in-progress / RFC). Điều này nghĩa là Next wants to formalize how to target Workers, edge platforms, etc. 
+nextjs.org
++1
+
+Ưu / nhược:
+
+Khi adapters matured: deploy anywhere (Workers, Netlify, Cloudflare) with consistent behavior.
+
+− Right now: there are differences across platforms (edge vs node server runtimes), some features behave differently (Edge runtime limitations on native Node APIs).
+
+− Vendor-specific features may require extra adapter logic.
+
+So sánh:
+
+SvelteKit: thiết kế để dễ target multiple adapters (adapter-netlify, adapter-cloudflare) — đã đi trước Next ở chỗ adapter-first for multiple runtimes.
+
+Nuxt 3: cũng có Nitro (server engine) và adapters to target hosting — khá mature for multi-deployment.
+Next.js đang tiến tới parity bằng Deployment Adapters API, nhưng hiện tại vẫn có những caveat khi chạy non-Vercel. 
+Cloudflare Docs
++1
+
+7) Metadata
+
+Next.js Metadata API (App Router):
+
+metadata export or generateMetadata function cho phép tạo <head> tags, OG images, titles, dynamic metadata per-route. Next tự generate các tag tương ứng. Hữu ích cho SEO và social previews; có support cho dynamic OG images generation patterns. 
+nextjs.org
++1
+
+Ưu điểm:
+
+Co-locate metadata với route (tập trung, dễ maintain).
+
+Hỗ trợ dynamic metadata, og image generation conventions.
+
+Nhược điểm:
+
+Nếu bạn cần cực kỳ tùy biến (complex SEO needs across many pages), vẫn cần custom head logic in some places.
+
+Một số social crawlers có quirks — test kỹ với real crawlers.
+
+So sánh:
+
+Remix / SvelteKit / Nuxt: đều hỗ trợ route-level metadata; Next.js metadata API khá đầy đủ và tích hợp tốt với App Router nên mang lại trải nghiệm dev tốt cho React devs. 
+nextjs.org
+
+Tổng hợp: Ưu & nhược điểm lớn của Next.js (tổng quan, so với frameworks khác)
+
+Ưu điểm lớn:
+
+Rất tích hợp: routing, data fetching, server components, metadata, ISR, API routes — nhiều thứ “built-in”. (good DX) 
+nextjs.org
+
+Ecosystem React: tận dụng toàn bộ React ecosystem, Vercel + CDN integration.
+
+Performance-focused features: RSC, streaming, granular caching/revalidate.
+
+Nhược điểm lớn:
+
+Complexity / surface area: nhiều API, nhiều cách làm cùng việc => learning curve, dễ nhầm lẫn giữa App vs Pages, server vs client.
+
+Platform differences: edge vs node runtime differences; deployment behavior có thể khác (một phần sẽ ổn hơn khi Adapters API hoàn thiện). 
+GitHub
+
+Khi chọn Next.js vs alternatives:
+
+Chọn Next.js nếu: bạn cần React, muốn nhiều feature tích hợp sẵn (SSR/SSG/ISR/RSC), ưu tiên DX và Vercel integration.
+
+Chọn Remix nếu: bạn thích web-standards-first, loader/action patterns, predictable data mutations and forms.
+
+Chọn SvelteKit nếu: bạn ưu hiệu năng bundle nhỏ, less runtime, hoặc muốn Svelte.
+
+Chọn Nuxt nếu: team bạn dùng Vue và cần tương tự Next ecosystem. 
+betterstack.com
++1
+
+Nếu bạn muốn — mình có thể:
+
+Viết tóm tắt ngắn (1 slide) so sánh Next.js vs Remix vs SvelteKit vs Nuxt theo tiêu chí: server rendering, data fetching, routing, metadata, deployment.
+
+Hoặc viết checklist migration: từ Pages → App Router (các bước chính, caveats).
+
+Bạn muốn mình làm cái nào tiếp theo? (mình sẽ làm ngay — chọn 1 hoặc cả 2).
