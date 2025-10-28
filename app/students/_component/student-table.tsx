@@ -158,7 +158,7 @@ function StudentTable() {
         </table>
       </div>
       {/* 🧍 Empty state */}
-      {students?.length === 0 && (
+      {students?.length === 0 && !loading && (
         <div className="text-center py-16 text-gray-500 bg-gray-50">
           <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-base">Không tìm thấy sinh viên nào</p>

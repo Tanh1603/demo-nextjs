@@ -7,6 +7,10 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const students = await prisma.student.findMany({
+      cacheStrategy: {
+        ttl: 60,
+        swr: 120,
+      },
       orderBy: {
         createdAt: "asc",
       },
@@ -48,7 +52,6 @@ export async function POST(req: NextRequest) {
           },
         })
     );
-    revalidatePath("/students", "page");
 
     return NextResponse.json({
       data: student,
