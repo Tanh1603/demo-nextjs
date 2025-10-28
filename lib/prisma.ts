@@ -13,11 +13,15 @@ import { Pool } from "pg";
 import { attachDatabasePool } from "@vercel/functions";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./generated/prisma/client";
+import { withAccelerate } from "@prisma/extension-accelerate";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 attachDatabasePool(pool);
 const prisma = new PrismaClient({
   adapter: new PrismaPg(pool),
-});
+}).$extends(withAccelerate());
+
+const globalForPrisma = global as unknown as { prisma: typeof prisma };
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;

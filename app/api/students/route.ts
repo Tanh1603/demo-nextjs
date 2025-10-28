@@ -7,10 +7,16 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   try {
     const students = await prisma.student.findMany({
+      cacheStrategy: {
+        ttl: 60,
+        swr: 120,
+      },
       orderBy: {
         createdAt: "asc",
       },
     });
+
+    await new Promise(r => setTimeout(r, 5000));
 
     return NextResponse.json(
       {
